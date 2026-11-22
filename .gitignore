@@ -1,0 +1,16 @@
+# Bộ cài nặng và dữ liệu không đưa lên Git (theo quy định trong AGENTS.md)
+spark-pip/
+hadoop-3.3.6.tar.gz
+data/
+
+# Các gói nén đóng gói chia sẻ
+*.tar.gz
+*.tgz
+*.zip
+
+# File tạm của hệ điều hành / IDE
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+~$*.docx

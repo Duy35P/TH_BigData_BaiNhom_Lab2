@@ -1,0 +1,104 @@
+name: spark-hdfs-lab
+
+x-lab: &lab
+  image: spark-hdfs-lab:1.0
+
+services:
+  # ---------- HDFS + client (luôn chạy) ----------
+  namenode:
+    <<: *lab
+    build: .
+    hostname: namenode
+    command: ["namenode"]
+    ports: ["9870:9870"]
+    volumes: ["nn-data:/hadoop/dfs/name"]
+
+  datanode1:
+    <<: *lab
+    hostname: datanode1
+    command: ["datanode"]
+    depends_on: [namenode]
+    ports: ["9864:9864"]
+    volumes: ["dn1-data:/hadoop/dfs/data"]
+
+  datanode2:
+    <<: *lab
+    hostname: datanode2
+    command: ["datanode"]
+    depends_on: [namenode]
+    ports: ["9865:9864"]
+    volumes: ["dn2-data:/hadoop/dfs/data"]
+
+  client:
+    <<: *lab
+    hostname: client
+    command: ["client"]
+    depends_on: [namenode]
+    ports: ["4040:4040", "4041:4041"]
+    volumes:
+      - ./apps:/apps
+      - ./data:/data
+      - ${ML25M_DIR:-./data}:/ml25m:ro
+
+  # ---------- Spark Standalone ----------
+  spark-master:
+    <<: *lab
+    hostname: spark-master
+    command: ["spark-master"]
+    profiles: ["standalone"]
+    ports: ["8080:8080"]
+
+  spark-worker1:
+    <<: *lab
+    hostname: spark-worker1
+    command: ["spark-worker"]
+    profiles: ["standalone"]
+    depends_on: [spark-master]
+    ports: ["8081:8081"]
+
+  spark-worker2:
+    <<: *lab
+    hostname: spark-worker2
+    command: ["spark-worker"]
+    profiles: ["standalone"]
+    depends_on: [spark-master]
+    ports: ["8082:8081"]
+
+  # ---------- YARN ----------
+  resourcemanager:
+    <<: *lab
+    hostname: resourcemanager
+    command: ["resourcemanager"]
+    profiles: ["yarn"]
+    depends_on: [namenode]
+    ports: ["8088:8088"]
+
+  nodemanager1:
+    <<: *lab
+    hostname: nodemanager1
+    command: ["nodemanager"]
+    profiles: ["yarn"]
+    depends_on: [resourcemanager]
+    ports: ["8042:8042"]
+
+  nodemanager2:
+    <<: *lab
+    hostname: nodemanager2
+    command: ["nodemanager"]
+    profiles: ["yarn"]
+    depends_on: [resourcemanager]
+    ports: ["8043:8042"]
+
+  # ---------- History Server (dùng cho cả hai chế độ) ----------
+  spark-history:
+    <<: *lab
+    hostname: spark-history
+    command: ["spark-history"]
+    profiles: ["history"]
+    depends_on: [namenode]
+    ports: ["18080:18080"]
+
+volumes:
+  nn-data:
+  dn1-data:
+  dn2-data:
